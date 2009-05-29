@@ -23,16 +23,6 @@
 #include <windows.h>
 #endif
 
-static void
-PerlIOUtil_warnif(pTHX_ U32 const category, const char* const fmt, ...){
-	if(ckWARN(category)){
-		va_list args;
-		va_start(args, fmt);
-		Perl_vwarner(aTHX_ category, fmt, &args);
-		va_end(args);
-	}
-}
-
 static PerlIO*
 PerlIOUtil_openn(pTHX_ PerlIO_funcs* const force_tab, PerlIO_list_t* const layers, IV const n,
 		const char* const mode, int const fd, int const imode, int const perm,
@@ -80,7 +70,9 @@ PerlIOUtil_useless_pushed(pTHX_ PerlIO* fp, const char* mode, SV* arg,
 	PERL_UNUSED_ARG(mode);
 	PERL_UNUSED_ARG(arg);
 
-	PerlIOUtil_warnif(aTHX_ packWARN(WARN_LAYER), "Too late for %s layer", tab->name);
+	if(ckWARN(WARN_LAYER)){
+		Perl_warner(aTHX_ packWARN(WARN_LAYER), "Too late for %s layer", tab->name);
+	}
 
 	return -1;
 }
@@ -88,7 +80,7 @@ PerlIOUtil_useless_pushed(pTHX_ PerlIO* fp, const char* mode, SV* arg,
 
 static SV*
 PerlIOFSE_get_fse(pTHX){
-	SV* const fse = get_sv("PerlIO::Util::fse", GV_ADDMULTI);
+	SV* const fse = get_sv("PerlIO::fse::fse", GV_ADDMULTI);
 
 	if (!SvOK(fse)) {
 #if defined(WIN32) || defined(__CYGWIN__)
@@ -155,15 +147,6 @@ PerlIOFSE_open(pTHX_ PerlIO_funcs* self, PerlIO_list_t* layers, IV n,
 
 		ENTER;
 		SAVETMPS;
-
-		/* load Encode.pm */
-		if(!SvOK(get_sv("Encode::VERSION", TRUE))){
-			require_pv("Encode.pm");
-			if(SvTRUE(ERRSV)){
-				Perl_croak(aTHX_ NULL);
-			}
-		}
-
 
 		save = args[0];
 		args[0] = PerlIOFSE_encode(aTHX_ fse, args[0]);

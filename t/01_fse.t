@@ -12,7 +12,7 @@ BEGIN{
 		exit;
 	}
 
-	plan tests => 9;
+	plan tests => 18;
 }
 
 use FindBin qw($Bin);
@@ -26,25 +26,30 @@ my $utf8     = File::Spec->catfile($Bin, 'util', $basename);
 my $non_utf8 = File::Spec->catfile($Bin, 'util', 'foo.txt');
 my $fse      = FSE;
 
-ok open(my $io, '>:fse', $utf8), 'open for writing';
-ok(Encode->VERSION, 'Encode.pm loaded');
+can_ok 'PerlIO::fse', 'get_fse';
+can_ok 'PerlIO::fse', 'set_fse';
 
-my $fsnative = Encode::encode(FSE, $utf8);
+for(1 .. 2){
 
-ok -e $fsnative, 'encoded file created';
+	ok open(my $io, '>:fse', $utf8), 'open for writing';
 
-ok open($io, '<:fse', $utf8), 'open for reading';
+	my $fsnative = Encode::encode(FSE, $utf8);
 
-ok open($io, "<:fse($fse)", $utf8), 'open for reading (explicit)';
+	ok -e $fsnative, 'encoded file created';
 
-ok open($io, '<:fse', $non_utf8), 'open non-utf8 file';
-is scalar(<$io>), 'foo.txt';
-close $io;
+	ok open($io, '<:fse', $utf8), 'open for reading';
 
-eval{
-	PerlIO::fse->set_fse('hogehoge');
-	open($io, '<:fse', $utf8);
-};
-ok $@, 'invalid encoding';
+	ok open($io, "<:fse($fse)", $utf8), 'open for reading (explicit)';
 
-ok unlink($fsnative), '(cleanup)';
+	ok open($io, '<:fse', $non_utf8), 'open non-utf8 file';
+	is scalar(<$io>), 'foo.txt';
+	close $io;
+
+	eval{
+		open($io, '<:fse(hogehoge)', $utf8);
+	};
+	ok $@, 'invalid encoding';
+
+	ok unlink($fsnative), '(cleanup)';
+}
+

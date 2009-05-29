@@ -3,10 +3,12 @@ package PerlIO::fse;
 use 5.008_001;
 use strict;
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 use XSLoader;
 XSLoader::load(__PACKAGE__, $VERSION);
+
+use Encode ();
 
 sub import{
 	my $class = shift;
@@ -25,9 +27,7 @@ __END__
 
 PerlIO::fse - Deals with Filesystem Encoding
 
-=for test_synopsis
-
-	my($file);
+=for test_synopsis my($file);
 
 =head1 SYNOPSIS
 
@@ -67,6 +67,20 @@ This layer uses C<Encode> internally to convert encodings.
 
 =head2 C<< PerlIO::fse->set_fse($encoding) >>
 
+=head1 HISTORY
+
+This module started in a part of C<PerlIO::Util>, but now is an independent
+distribution. There are two reasons for this.
+
+First, C<PerlIO::fse> is unstable. I have seen segmentation fault in the test
+suit in some perls, but could not find what causes the problem. This problem
+should be resolved.
+
+Second, authough automatic encoding detection is available in Windows system,
+it can be implemented in non-Windows, and it should be. This feature may require
+many tests, but I don't want to increment the version of C<PerlIO::Util>.
+
+
 =head1 SEE ALSO
 
 L<PerlIO::Util>.
@@ -75,7 +89,7 @@ L<Encode>.
 
 =head1 AUTHOR
 
-Goro Fuji (藤 吾郎) E<lt>gfuji (at) cpan.orgE<gt>
+Goro Fuji (藤 吾郎) E<lt>gfuji (at) cpan.orgE<gt>.
 
 =head1 LICENSE AND COPYRIGHT
 
